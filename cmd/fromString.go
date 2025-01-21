@@ -82,7 +82,6 @@ func lex_string(s string) (string, error) {
 		}
 
 		if character == QUOTE {
-			fmt.Println("index is:  ", index, "string is: ", s)
 			return "", errFoundQuotesInBetween
 		}
 
