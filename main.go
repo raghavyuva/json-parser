@@ -1,7 +1,10 @@
+/*
+Copyright © 2025 raghavyuva <raghavyuva@gmail.com>
+*/
 package main
 
-import "fmt"
+import "github.com/raghavyuva/json-parser/cmd"
 
 func main() {
-	fmt.Println("Hello, World!")
+	cmd.Execute()
 }
