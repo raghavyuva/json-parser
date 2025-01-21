@@ -91,3 +91,7 @@ func lex_string(s string) (string, error) {
 	fmt.Println("valid output is: ", output)
 	return output, nil
 }
+
+func lex_number(s string) (string, error) {
+	return "", nil
+}
