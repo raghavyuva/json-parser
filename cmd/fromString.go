@@ -4,9 +4,28 @@ Copyright © 2025 raghavyuva <raghavyuva@gmail.com>
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
+)
+
+// list of variables used to determine each characters / symbols for readablity
+var (
+	COMMA        = ','
+	COLON        = ':'
+	LEFTBRACKET  = '['
+	RIGHTBRACKET = ']'
+	LEFTBRACE    = '{'
+	RIGHTBRACE   = '}'
+	QUOTE        = '"'
+)
+
+var (
+	errEmptyStringFound             = errors.New("empty string found")
+	errInvalidOpeningQuotesInString = errors.New("invalid opening quotes in string")
+	errInvalidEndingQuotesInString  = errors.New("invalid ending quotes in string")
+	errFoundQuotesInBetween         = errors.New("found quotes in between string")
 )
 
 // fromStringCmd represents the fromString command
@@ -18,10 +37,58 @@ Example: json-parser fromString '{"name": "Tony Stark", "age": 22}'
 		will print {"name": "Tony Stark", "age": 22}
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("fromString called with args:", args)
+		// we need to consider only one argument after the command which will be the string value itself
+		if len(args) != 1 {
+			fmt.Fprintln(cmd.ErrOrStderr(), "Error: fromString requires one argument")
+			return
+		}
+
+		stringValue := args[0]
+
+		fmt.Println("final result is: ", stringValue)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(fromStringCmd)
+}
+
+// lex_string validates and extracts the content inside quotes from a given string.
+// It returns a pointer to the extracted string content or an error if the input string is malformed.
+// Errors returned can include:
+// - errEmptyStringFound: if the input string is empty
+// - errInvalidOpeningQuotesInString: if the input string does not start with opening quotes
+// - errInvalidEndingQuotesInString: if the input string does not end with closing quotes
+// - errFoundQuotesInBetween: if the input string contains quotes in between
+func lex_string(s string) (string, error) {
+	output := ""
+	string_length := len(s)
+
+	if s == "" {
+		return "", errEmptyStringFound
+	}
+
+	if s[0] != byte(QUOTE) {
+		return "", errInvalidOpeningQuotesInString
+	}
+
+	if s[string_length-1] != byte(QUOTE) {
+		return "", errInvalidEndingQuotesInString
+	}
+
+	for index, character := range s {
+		if index == 0 || index == string_length-1 {
+			continue
+		}
+
+		if character == QUOTE {
+			fmt.Println("index is:  ", index, "string is: ", s)
+			return "", errFoundQuotesInBetween
+		}
+
+		output += string(character)
+	}
+
+	fmt.Println("valid output is: ", output)
+	return output, nil
 }
