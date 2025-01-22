@@ -26,6 +26,7 @@ var (
 	errInvalidOpeningQuotesInString = errors.New("invalid opening quotes in string")
 	errInvalidEndingQuotesInString  = errors.New("invalid ending quotes in string")
 	errFoundQuotesInBetween         = errors.New("found quotes in between string")
+	errInvalidDigitFound            = errors.New("invalid digit found")
 )
 
 // fromStringCmd represents the fromString command
@@ -92,6 +93,26 @@ func lex_string(s string) (string, error) {
 	return output, nil
 }
 
+// lex_number validates and extracts the number from a given string.
+// It returns the extracted number as a string or an error if the input string is malformed.
+// Errors returned can include:
+// - errEmptyStringFound: if the input string is empty
+// - errInvalidDigitFound: if the input string contains invalid digits
 func lex_number(s string) (string, error) {
-	return "", nil
+	fmt.Printf("input string is: %s\n", s)
+	output := ""
+	if s == "" {
+		fmt.Printf("empty string found\n")
+		return "", errEmptyStringFound
+	}
+
+	for _, character := range s {
+		if (character < '0' || character > '9') && character != '+' && character != '.' && character != '-' && character != 'e' {
+			fmt.Printf("invalid digit found\n")
+			return "", errInvalidDigitFound
+		}
+		output += string(character)
+	}
+	fmt.Printf("valid output is: %s\n", output)
+	return output, nil
 }
