@@ -28,6 +28,7 @@ var (
 	errFoundQuotesInBetween         = errors.New("found quotes in between string")
 	errInvalidDigitFound            = errors.New("invalid digit found")
 	errInvalidBooleanFound          = errors.New("invalid boolean found")
+	errInvalidNullValue             = errors.New("invalid null value")
 )
 
 // fromStringCmd represents the fromString command
@@ -135,4 +136,19 @@ func lex_boolean(s string) (string, error) {
 	}
 
 	return "", errInvalidBooleanFound
+}
+
+// lex_null_value validates and extracts the null value from a given string.
+// It returns the extracted null value as a string or an error if the input string is malformed.
+// Errors returned can include:
+// - errInvalidNullValue: if the input string does not contain a valid null value
+func lex_null_value(s string) (string, error) {
+	fmt.Printf("input string is: %s\n", s)
+
+	if s == "null" {
+		fmt.Printf("valid output is: %s\n", s)
+		return s, nil
+	}
+
+	return "", errInvalidNullValue
 }
