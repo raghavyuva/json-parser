@@ -27,6 +27,7 @@ var (
 	errInvalidEndingQuotesInString  = errors.New("invalid ending quotes in string")
 	errFoundQuotesInBetween         = errors.New("found quotes in between string")
 	errInvalidDigitFound            = errors.New("invalid digit found")
+	errInvalidBooleanFound          = errors.New("invalid boolean found")
 )
 
 // fromStringCmd represents the fromString command
@@ -117,6 +118,21 @@ func lex_number(s string) (string, error) {
 	return output, nil
 }
 
+// lex_boolean validates and extracts the boolean from a given string.
+// It returns the extracted boolean as a string or an error if the input string is malformed.
+// Errors returned can include:
+// - errInvalidBooleanFound: if the input string does not contain a valid boolean
 func lex_boolean(s string) (string, error) {
-	return "", nil
+
+	fmt.Printf("input string is: %s\n", s)
+
+	output := ""
+
+	if s == "true" || s == "false" {
+		output = s
+		fmt.Printf("valid output is: %s\n", output)
+		return output, nil
+	}
+
+	return "", errInvalidBooleanFound
 }
