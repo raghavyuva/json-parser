@@ -116,3 +116,7 @@ func lex_number(s string) (string, error) {
 	fmt.Printf("valid output is: %s\n", output)
 	return output, nil
 }
+
+func lex_boolean(s string) (string, error) {
+	return "", nil
+}
