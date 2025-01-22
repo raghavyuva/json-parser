@@ -56,6 +56,101 @@ func init() {
 	rootCmd.AddCommand(fromStringCmd)
 }
 
+// lexer is a function that takes a string as input and returns a token or an error
+// typical use of lexer is to convert a string to a list of tokens
+// Example input : '{"foo": [1, 2, {"bar": 2}]}'
+// Example output : ['{', 'foo', ':', '[', 1, ',', 2, ',', '{', 'bar', ':', 2, '}', ']', '}']
+func lexer(s string) ([]string, error) {
+    tokens := []string{}
+    i := 0
+    length := len(s)
+    
+    for i < length {
+        char := s[i]
+        
+        if char == ' ' || char == '\t' || char == '\n' || char == '\r' {
+            i++
+            continue
+        }
+        
+        if char == '{' || char == '}' || char == '[' || char == ']' || char == ':' || char == ',' {
+            tokens = append(tokens, string(char))
+            i++
+            continue
+        }
+        
+        if char == '"' {
+            start := i
+            i++
+            for i < length && s[i] != '"' {
+                if s[i] == '\\' {
+                    i += 2
+                    continue
+                }
+                i++
+            }
+            if i >= length {
+                return nil, errInvalidEndingQuotesInString
+            }
+            i++
+            
+            token, err := lex_string(s[start:i])
+            if err != nil {
+                return nil, err
+            }
+            tokens = append(tokens, token)
+            continue
+        }
+        
+        if char == '-' || char == '+' || (char >= '0' && char <= '9') {
+            start := i
+            i++
+            for i < length && (s[i] == '.' || s[i] == 'e' || s[i] == '+' || s[i] == '-' || (s[i] >= '0' && s[i] <= '9')) {
+                i++
+            }
+            token, err := lex_number(s[start:i])
+            if err != nil {
+                return nil, err
+            }
+            tokens = append(tokens, token)
+            continue
+        }
+        
+        if i+4 <= length && s[i:i+4] == "true" {
+            token, err := lex_boolean("true")
+            if err != nil {
+                return nil, err
+            }
+            tokens = append(tokens, token)
+            i += 4
+            continue
+        }
+        if i+5 <= length && s[i:i+5] == "false" {
+            token, err := lex_boolean("false")
+            if err != nil {
+                return nil, err
+            }
+            tokens = append(tokens, token)
+            i += 5
+            continue
+        }
+        
+        if i+4 <= length && s[i:i+4] == "null" {
+            token, err := lex_null_value("null")
+            if err != nil {
+                return nil, err
+            }
+            tokens = append(tokens, token)
+            i += 4
+            continue
+        }
+        
+        return nil, fmt.Errorf("invalid character at position %d: %c", i, char)
+    }
+    
+    return tokens, nil
+}
+
 // lex_string validates and extracts the content inside quotes from a given string.
 // It returns a pointer to the extracted string content or an error if the input string is malformed.
 // Errors returned can include:
