@@ -33,22 +33,19 @@ var (
 
 // fromStringCmd represents the fromString command
 var fromStringCmd = &cobra.Command{
-	Use:   "fromString",
+	Use:   "fromString [json_string]",
 	Short: "converts string to json",
-	Long: `fromString converts string to json and prints out the result. 
-Example: json-parser fromString '{"name": "Tony Stark", "age": 22}'
-		will print {"name": "Tony Stark", "age": 22}
-`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// we need to consider only one argument after the command which will be the string value itself
-		if len(args) != 1 {
-			fmt.Fprintln(cmd.ErrOrStderr(), "Error: fromString requires one argument")
-			return
+	Long: `fromString converts string to json and prints out the result.
+ Example: json-parser fromString '{"name": "Tony Stark", "age": 22}'`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tokens, err := lexer(args[0])
+		if err != nil {
+			return fmt.Errorf("failed to parse json: %v", err)
 		}
 
-		stringValue := args[0]
-
-		fmt.Println("final result is: ", stringValue)
+		fmt.Printf("Tokens: %v\n", tokens)
+		return nil
 	},
 }
 
@@ -61,94 +58,94 @@ func init() {
 // Example input : '{"foo": [1, 2, {"bar": 2}]}'
 // Example output : ['{', 'foo', ':', '[', 1, ',', 2, ',', '{', 'bar', ':', 2, '}', ']', '}']
 func lexer(s string) ([]string, error) {
-    tokens := []string{}
-    i := 0
-    length := len(s)
-    
-    for i < length {
-        char := s[i]
-        
-        if char == ' ' || char == '\t' || char == '\n' || char == '\r' {
-            i++
-            continue
-        }
-        
-        if char == '{' || char == '}' || char == '[' || char == ']' || char == ':' || char == ',' {
-            tokens = append(tokens, string(char))
-            i++
-            continue
-        }
-        
-        if char == '"' {
-            start := i
-            i++
-            for i < length && s[i] != '"' {
-                if s[i] == '\\' {
-                    i += 2
-                    continue
-                }
-                i++
-            }
-            if i >= length {
-                return nil, errInvalidEndingQuotesInString
-            }
-            i++
-            
-            token, err := lex_string(s[start:i])
-            if err != nil {
-                return nil, err
-            }
-            tokens = append(tokens, token)
-            continue
-        }
-        
-        if char == '-' || char == '+' || (char >= '0' && char <= '9') {
-            start := i
-            i++
-            for i < length && (s[i] == '.' || s[i] == 'e' || s[i] == '+' || s[i] == '-' || (s[i] >= '0' && s[i] <= '9')) {
-                i++
-            }
-            token, err := lex_number(s[start:i])
-            if err != nil {
-                return nil, err
-            }
-            tokens = append(tokens, token)
-            continue
-        }
-        
-        if i+4 <= length && s[i:i+4] == "true" {
-            token, err := lex_boolean("true")
-            if err != nil {
-                return nil, err
-            }
-            tokens = append(tokens, token)
-            i += 4
-            continue
-        }
-        if i+5 <= length && s[i:i+5] == "false" {
-            token, err := lex_boolean("false")
-            if err != nil {
-                return nil, err
-            }
-            tokens = append(tokens, token)
-            i += 5
-            continue
-        }
-        
-        if i+4 <= length && s[i:i+4] == "null" {
-            token, err := lex_null_value("null")
-            if err != nil {
-                return nil, err
-            }
-            tokens = append(tokens, token)
-            i += 4
-            continue
-        }
-        
-        return nil, fmt.Errorf("invalid character at position %d: %c", i, char)
-    }
-    
-    return tokens, nil
+	tokens := []string{}
+	i := 0
+	length := len(s)
+
+	for i < length {
+		char := s[i]
+
+		if char == ' ' || char == '\t' || char == '\n' || char == '\r' {
+			i++
+			continue
+		}
+
+		if char == '{' || char == '}' || char == '[' || char == ']' || char == ':' || char == ',' {
+			tokens = append(tokens, string(char))
+			i++
+			continue
+		}
+
+		if char == '"' {
+			start := i
+			i++
+			for i < length && s[i] != '"' {
+				if s[i] == '\\' {
+					i += 2
+					continue
+				}
+				i++
+			}
+			if i >= length {
+				return nil, errInvalidEndingQuotesInString
+			}
+			i++
+
+			token, err := lex_string(s[start:i])
+			if err != nil {
+				return nil, err
+			}
+			tokens = append(tokens, token)
+			continue
+		}
+
+		if char == '-' || char == '+' || (char >= '0' && char <= '9') {
+			start := i
+			i++
+			for i < length && (s[i] == '.' || s[i] == 'e' || s[i] == '+' || s[i] == '-' || (s[i] >= '0' && s[i] <= '9')) {
+				i++
+			}
+			token, err := lex_number(s[start:i])
+			if err != nil {
+				return nil, err
+			}
+			tokens = append(tokens, token)
+			continue
+		}
+
+		if i+4 <= length && s[i:i+4] == "true" {
+			token, err := lex_boolean("true")
+			if err != nil {
+				return nil, err
+			}
+			tokens = append(tokens, token)
+			i += 4
+			continue
+		}
+		if i+5 <= length && s[i:i+5] == "false" {
+			token, err := lex_boolean("false")
+			if err != nil {
+				return nil, err
+			}
+			tokens = append(tokens, token)
+			i += 5
+			continue
+		}
+
+		if i+4 <= length && s[i:i+4] == "null" {
+			token, err := lex_null_value("null")
+			if err != nil {
+				return nil, err
+			}
+			tokens = append(tokens, token)
+			i += 4
+			continue
+		}
+
+		return nil, fmt.Errorf("invalid character at position %d: %c", i, char)
+	}
+
+	return tokens, nil
 }
 
 // lex_string validates and extracts the content inside quotes from a given string.
@@ -186,7 +183,6 @@ func lex_string(s string) (string, error) {
 		output += string(character)
 	}
 
-	fmt.Println("valid output is: ", output)
 	return output, nil
 }
 
@@ -196,21 +192,17 @@ func lex_string(s string) (string, error) {
 // - errEmptyStringFound: if the input string is empty
 // - errInvalidDigitFound: if the input string contains invalid digits
 func lex_number(s string) (string, error) {
-	fmt.Printf("input string is: %s\n", s)
 	output := ""
 	if s == "" {
-		fmt.Printf("empty string found\n")
 		return "", errEmptyStringFound
 	}
 
 	for _, character := range s {
 		if (character < '0' || character > '9') && character != '+' && character != '.' && character != '-' && character != 'e' {
-			fmt.Printf("invalid digit found\n")
 			return "", errInvalidDigitFound
 		}
 		output += string(character)
 	}
-	fmt.Printf("valid output is: %s\n", output)
 	return output, nil
 }
 
@@ -219,14 +211,10 @@ func lex_number(s string) (string, error) {
 // Errors returned can include:
 // - errInvalidBooleanFound: if the input string does not contain a valid boolean
 func lex_boolean(s string) (string, error) {
-
-	fmt.Printf("input string is: %s\n", s)
-
 	output := ""
 
 	if s == "true" || s == "false" {
 		output = s
-		fmt.Printf("valid output is: %s\n", output)
 		return output, nil
 	}
 
@@ -238,10 +226,7 @@ func lex_boolean(s string) (string, error) {
 // Errors returned can include:
 // - errInvalidNullValue: if the input string does not contain a valid null value
 func lex_null_value(s string) (string, error) {
-	fmt.Printf("input string is: %s\n", s)
-
 	if s == "null" {
-		fmt.Printf("valid output is: %s\n", s)
 		return s, nil
 	}
 
